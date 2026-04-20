@@ -22,13 +22,16 @@ mongoose.connect(MONGODB_URI)
     .then(() => console.log('Successfully connected to MongoDB.'))
     .catch(err => {
         console.error('MongoDB connection error:', err);
-        // Important: in Kudu we should log the actual error out loudly initially.
     });
 
 // Make sure Todo model is required
 const Todo = require('./models/Todo');
 
-// API Routes
+/* ──────────────────────────────────────────────────────────────
+   API Routes
+────────────────────────────────────────────────────────────── */
+
+// GET all todos (sorted newest first)
 app.get('/api/todos', async (req, res) => {
     try {
         const todos = await Todo.find().sort({ createdAt: -1 });
@@ -38,13 +41,19 @@ app.get('/api/todos', async (req, res) => {
     }
 });
 
+// POST — create a new todo
 app.post('/api/todos', async (req, res) => {
     try {
-        const { text, priority } = req.body;
-        if (!text) {
+        const { text, priority, due } = req.body;
+        if (!text || !text.trim()) {
             return res.status(400).json({ error: 'Text is required' });
         }
-        const newTodo = new Todo({ text, priority: priority || 'Medium', completed: false });
+        const newTodo = new Todo({
+            text: text.trim(),
+            priority: priority || 'Medium',
+            completed: false,
+            due: due ? new Date(due) : null
+        });
         await newTodo.save();
         res.status(201).json(newTodo);
     } catch (err) {
@@ -52,25 +61,51 @@ app.post('/api/todos', async (req, res) => {
     }
 });
 
+// DELETE — remove a todo by id
 app.delete('/api/todos/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        await Todo.findByIdAndDelete(id);
+        const deleted = await Todo.findByIdAndDelete(id);
+        if (!deleted) return res.status(404).json({ error: 'Todo not found' });
         res.status(200).json({ message: 'Todo deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: 'Failed to delete todo' });
     }
 });
 
+// PUT — update a todo (supports: completed, text, priority, due)
 app.put('/api/todos/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { completed } = req.body;
-        const updatedTodo = await Todo.findByIdAndUpdate(id, { completed }, { new: true });
+        const { completed, text, priority, due } = req.body;
+
+        const updateFields = {};
+        if (typeof completed === 'boolean') updateFields.completed = completed;
+        if (text !== undefined && text.trim()) updateFields.text = text.trim();
+        if (priority !== undefined) updateFields.priority = priority;
+        if (due !== undefined) updateFields.due = due ? new Date(due) : null;
+
+        const updatedTodo = await Todo.findByIdAndUpdate(
+            id,
+            { $set: updateFields },
+            { new: true }
+        );
+        if (!updatedTodo) return res.status(404).json({ error: 'Todo not found' });
         res.json(updatedTodo);
     } catch (err) {
         res.status(500).json({ error: 'Failed to update todo' });
     }
+});
+
+// GET — health check endpoint
+app.get('/api/health', (req, res) => {
+    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    res.json({
+        status: 'ok',
+        db: dbStatus,
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
 });
 
 // Start Server

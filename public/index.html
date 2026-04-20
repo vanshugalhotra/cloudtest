@@ -3,40 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Tasks</title>
-    <meta name="description" content="A minimal, premium todo app deployed on Azure Apps.">
-    <!-- Google Fonts: Inter -->
+    <title>CloudTask — Vanshu Galhotra</title>
+    <meta name="description" content="A premium cloud-synced task manager built on Azure with Node.js and MongoDB.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-container">
-        <header>
-            <h1>TODO LIST</h1>
-            <p class="subtitle">Vanshu Galhotra | Roll No: 205124107</p>
+
+    <!-- Animated background orbs -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <div class="app-wrapper">
+
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                    </svg>
+                </div>
+                <span class="logo-text">CloudTask</span>
+            </div>
+            <div class="header-meta">
+                <span class="db-status" id="db-status">
+                    <span class="db-dot"></span>
+                    <span class="db-label">Connecting...</span>
+                </span>
+                <span class="user-badge">Vanshu Galhotra · 205124107</span>
+            </div>
         </header>
 
-        <div class="todo-card">
-            <form id="todo-form">
-                <input type="text" id="todo-input" placeholder="What needs to be done?" autocomplete="off" required />
-                <select id="todo-priority">
-                    <option value="Low">Low</option>
-                    <option value="Medium" selected>Medium</option>
-                    <option value="High">High</option>
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Progress Section -->
+            <section class="progress-section" id="progress-section">
+                <div class="progress-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="total-count">0</span>
+                        <span class="stat-label">Total</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-number accent-green" id="done-count">0</span>
+                        <span class="stat-label">Done</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-number accent-blue" id="pending-count">0</span>
+                        <span class="stat-label">Pending</span>
+                    </div>
+                </div>
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                <span class="progress-pct" id="progress-pct">0% complete</span>
+            </section>
+
+            <!-- Add Task Card -->
+            <section class="add-section">
+                <form id="todo-form">
+                    <div class="input-row">
+                        <div class="input-field-wrap">
+                            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            <input type="text" id="todo-input" placeholder="Add a new task..." autocomplete="off" required />
+                        </div>
+                        <div class="form-controls">
+                            <select id="todo-priority" title="Priority">
+                                <option value="Low">🟢 Low</option>
+                                <option value="Medium" selected>🔵 Medium</option>
+                                <option value="High">🔴 High</option>
+                            </select>
+                            <input type="date" id="todo-due" title="Due date" />
+                            <button type="submit" id="add-btn">
+                                <span id="add-btn-text">Add Task</span>
+                                <span id="add-btn-spinner" class="spinner hidden"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Error Message -->
+            <div class="error-toast" id="error-msg" role="alert"></div>
+
+            <!-- Filter & Search Bar -->
+            <section class="filter-section">
+                <div class="search-wrap">
+                    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Search tasks..." />
+                </div>
+                <div class="filter-tabs" role="tablist">
+                    <button class="tab-btn active" data-filter="all" role="tab">All</button>
+                    <button class="tab-btn" data-filter="active" role="tab">Active</button>
+                    <button class="tab-btn" data-filter="completed" role="tab">Completed</button>
+                </div>
+                <div class="priority-filter">
+                    <select id="priority-filter" title="Filter by priority">
+                        <option value="all">All Priorities</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Task List -->
+            <section class="tasks-section">
+                <ul id="todo-list" aria-label="Task list"></ul>
+
+                <!-- Bulk Actions -->
+                <div class="bulk-actions" id="bulk-actions">
+                    <span class="bulk-info" id="bulk-info"></span>
+                    <button id="clear-completed-btn" class="clear-btn">Clear Completed</button>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="app-footer">
+            <span>CloudTask &copy; 2026 · UstaadJI</span>
+        </footer>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="edit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="modal-title">Edit Task</h2>
+                <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label for="edit-input">Task Name</label>
+                <input type="text" id="edit-input" placeholder="Task name..." />
+                <label for="edit-priority">Priority</label>
+                <select id="edit-priority">
+                    <option value="Low">🟢 Low</option>
+                    <option value="Medium">🔵 Medium</option>
+                    <option value="High">🔴 High</option>
                 </select>
-                <button type="submit" id="add-btn">Add</button>
-            </form>
-
-            <div class="error-msg" id="error-msg"></div>
-
-            <ul id="todo-list">
-                <!-- Todos will be injected here via JS -->
-            </ul>
+                <label for="edit-due">Due Date</label>
+                <input type="date" id="edit-due" />
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ghost" id="modal-cancel">Cancel</button>
+                <button class="btn-primary" id="modal-save">Save Changes</button>
+            </div>
         </div>
     </div>
-    
+
     <script src="script.js"></script>
 </body>
 </html>
