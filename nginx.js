@@ -37,8 +37,9 @@ nano .env
 
 # Paste the following into the .env file:
 # --- .env content start ---
-MONGODB_URI=mongodb+srv://ustaadji:Version26%401228@versionevents.mju7wlv.mongodb.net/cloudtest?retryWrites=true&w=majority
-PORT=3000
+
+webmail
+
 # --- .env content end ---
 
 6. Start the server with PM2
