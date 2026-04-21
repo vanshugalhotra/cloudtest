@@ -50,6 +50,12 @@ pm2 start server.js --name "app"
 pm2 save
 pm2 startup
 
+
+6.1 ------------------enable
+sudo chmod +x /home/ubuntu
+sudo chmod +x /home/ubuntu/cloudtest
+
+
 7. Configure Nginx
 ------------------
 # Open a new nginx config file
