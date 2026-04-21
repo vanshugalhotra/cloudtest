@@ -101,4 +101,7 @@ sudo nginx -t
 
 # Restart Nginx to apply all the changes
 sudo systemctl restart nginx
+
+
+pm2 list
 */
